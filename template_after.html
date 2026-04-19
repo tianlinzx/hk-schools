@@ -1,0 +1,139 @@
+var PAGE_SIZE = 50;
+var currentPage = 1;
+var filteredData = SCHOOLS.slice();
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderDate();
+  renderStats();
+  populateFilters();
+  applyFilters();
+});
+
+function renderDate() {
+  var now = new Date();
+  var days = ['日','一','二','三','四','五','六'];
+  document.getElementById('currentDate').textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + days[now.getDay()];
+}
+
+function renderStats() {
+  var total = SCHOOLS.length;
+  var open = SCHOOLS.filter(function(s){ return s.status && s.status.indexOf('開放') >= 0; }).length;
+  document.getElementById('statOpen').textContent = open;
+  document.getElementById('statTotal').textContent = total;
+  var types = {};
+  SCHOOLS.forEach(function(s){ types[s.type] = (types[s.type]||0) + 1; });
+  var parts = [];
+  for (var k in types) parts.push(k + ' ' + types[k]);
+  document.getElementById('statTotalBreakdown').textContent = parts.join(' \u00b7 ');
+  document.getElementById('statOpenBreakdown').textContent = open > 0 ? '小學 ' + open : '暫無開放申請';
+}
+
+function populateFilters() {
+  var districts = unique('district').sort();
+  var genders = unique('gender').sort();
+  var types = unique('type').sort();
+  var statuses = unique('status').sort();
+  fillSel('filterDistrict', districts);
+  fillSel('filterGender', genders);
+  fillSel('filterType', types);
+  fillSel('filterStatus', statuses);
+}
+
+function unique(key) {
+  var seen = {}, out = [];
+  SCHOOLS.forEach(function(s){ var v = s[key]; if(v && !seen[v]){ seen[v]=1; out.push(v); } });
+  return out;
+}
+
+function fillSel(id, items) {
+  var el = document.getElementById(id);
+  items.forEach(function(item) {
+    var o = document.createElement('option');
+    o.value = item; o.textContent = item;
+    el.appendChild(o);
+  });
+}
+
+function applyFilters() {
+  var search = document.getElementById('searchInput').value.trim().toLowerCase();
+  var district = document.getElementById('filterDistrict').value;
+  var gender = document.getElementById('filterGender').value;
+  var type = document.getElementById('filterType').value;
+  var status = document.getElementById('filterStatus').value;
+  filteredData = SCHOOLS.filter(function(s) {
+    if (search && s.name.toLowerCase().indexOf(search) < 0) return false;
+    if (district && s.district !== district) return false;
+    if (gender && s.gender !== gender) return false;
+    if (type && s.type !== type) return false;
+    if (status && s.status !== status) return false;
+    return true;
+  });
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+  document.getElementById('resultCount').textContent = '共 ' + filteredData.length + ' 所學校';
+}
+
+var typeBadgeMap = {'私立':'badge-private','直资':'badge-direct','官立':'badge-public','资助':'badge-aided'};
+
+function renderTable() {
+  var tbody = document.getElementById('tableBody');
+  var start = (currentPage - 1) * PAGE_SIZE;
+  var page = filteredData.slice(start, start + PAGE_SIZE);
+  var html = '';
+  for (var i = 0; i < page.length; i++) {
+    var s = page[i];
+    var tc = typeBadgeMap[s.type] || 'badge-closed';
+    var statusHtml = s.status
+      ? (s.status.indexOf('開放') >= 0
+        ? '<span class="badge badge-open">' + s.status + '</span>'
+        : '<span class="badge badge-closed">' + s.status + '</span>')
+      : '<span class="badge-none">—</span>';
+    var deadlineHtml = s.deadline || '<span class="badge-none">—</span>';
+    var webHtml = s.website && s.website.indexOf('http') === 0
+      ? '<a href="' + s.website + '" target="_blank" rel="noopener" class="link-icon"><svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>'
+      : '<span class="badge-none">—</span>';
+    html += '<tr><td style="font-weight:500">' + s.name + '</td><td>' + s.district + '</td><td>' + s.gender + '</td><td><span class="badge ' + tc + '">' + s.type + '</span></td><td style="color:#999">' + deadlineHtml + '</td><td>' + statusHtml + '</td><td>' + webHtml + '</td></tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function renderPagination() {
+  var total = Math.ceil(filteredData.length / PAGE_SIZE);
+  var el = document.getElementById('pagination');
+  if (total <= 1) { el.innerHTML = ''; return; }
+  var html = '';
+  if (currentPage > 1) html += '<button class="page-btn" onclick="goPage('+(currentPage-1)+')">上一頁</button>';
+  for (var i = 1; i <= total; i++) {
+    if (i === currentPage) {
+      html += '<span class="page-active">' + i + '</span>';
+    } else if (Math.abs(i - currentPage) <= 2 || i === 1 || i === total) {
+      html += '<button class="page-btn" onclick="goPage('+i+')">' + i + '</button>';
+    } else if (Math.abs(i - currentPage) === 3) {
+      html += '<span class="page-dots">...</span>';
+    }
+  }
+  if (currentPage < total) html += '<button class="page-btn" onclick="goPage('+(currentPage+1)+')">下一頁</button>';
+  el.innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderTable();
+  renderPagination();
+  window.scrollTo(0, 300);
+}
+
+function exportCSV() {
+  var headers = ['學校名稱','區域','性別','類型','截止日期','狀態','地址','官網','電話'];
+  var rows = filteredData.map(function(s){ return [s.name,s.district,s.gender,s.type,s.deadline,s.status,s.address,s.website,s.phone]; });
+  var csv = '\uFEFF' + [headers].concat(rows).map(function(r){ return r.map(function(c){ return '"'+(c||'').replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hk_primary_schools.csv';
+  a.click();
+}
+</script>
+</body>
+</html>

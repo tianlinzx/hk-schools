@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>香港小學插班資訊</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F5F5; color: #333; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+
+/* Header */
+.header { background: #fff; border-bottom: 1px solid #e5e7eb; }
+.header-inner { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 22px; font-weight: 700; color: #1E3A8A; }
+.header .date { font-size: 13px; color: #999; margin-top: 4px; }
+.header .login-btn { background: #1E3A8A; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.header .login-btn:hover { background: #162d6b; }
+
+/* Main */
+.main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #f0f0f0; }
+.stat-card .label { font-size: 13px; color: #666; }
+.stat-card .value { font-size: 32px; font-weight: 700; color: #333; margin-top: 4px; }
+.stat-card .sub { font-size: 12px; color: #999; margin-top: 8px; }
+.stat-card .status-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.stat-card .status-text { font-size: 13px; color: #999; }
+.refresh-btn { background: none; border: none; color: #EF4444; cursor: pointer; padding: 4px; }
+.refresh-btn:hover { color: #dc2626; }
+.refresh-btn svg { width: 20px; height: 20px; }
+
+/* Filter */
+.filter-bar { background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #f0f0f0; margin-bottom: 24px; }
+.filter-grid { display: grid; grid-template-columns: 1fr repeat(4, 1fr); gap: 12px; }
+.search-wrap { position: relative; }
+.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #999; }
+.search-input { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+.search-input:focus { border-color: #1E3A8A; box-shadow: 0 0 0 3px rgba(30,58,138,0.1); }
+.filter-select { width: 100%; padding: 10px 32px 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; color: #666; outline: none; background: #fff; transition: border-color 0.2s;
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.filter-select:focus { border-color: #1E3A8A; box-shadow: 0 0 0 3px rgba(30,58,138,0.1); }
+
+/* Result bar */
+.result-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.result-count { font-size: 13px; color: #999; }
+.export-btn { font-size: 12px; color: #999; background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+.export-btn:hover { color: #1E3A8A; border-color: #1E3A8A; }
+
+/* Table */
+.table-wrap { background: #fff; border-radius: 12px; border: 1px solid #f0f0f0; overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead tr { background: #f9fafb; }
+th { padding: 12px 16px; text-align: left; font-weight: 500; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+td { padding: 12px 16px; white-space: nowrap; }
+tbody tr { border-bottom: 1px solid #f5f5f5; transition: background 0.15s; }
+tbody tr:hover { background: #F0F4FF; }
+tbody tr:nth-child(even) { background: #fafbfc; }
+tbody tr:nth-child(even):hover { background: #F0F4FF; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+.badge-private { background: #fef3c7; color: #b45309; }
+.badge-direct { background: #dbeafe; color: #1d4ed8; }
+.badge-public { background: #ede9fe; color: #7c3aed; }
+.badge-aided { background: #ccfbf1; color: #0f766e; }
+.badge-open { background: #dcfce7; color: #15803d; }
+.badge-closed { background: #f3f4f6; color: #6b7280; }
+.badge-none { color: #d1d5db; }
+.link-icon { color: #EF4444; }
+.link-icon:hover { color: #dc2626; }
+
+/* Pagination */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
+.page-btn { padding: 6px 12px; font-size: 14px; color: #666; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; }
+.page-btn:hover { color: #1E3A8A; border-color: #1E3A8A; }
+.page-active { padding: 6px 12px; font-size: 14px; font-weight: 600; color: #fff; background: #1E3A8A; border-radius: 8px; }
+.page-dots { color: #999; padding: 0 4px; }
+
+/* Footer */
+.footer { text-align: center; padding: 24px; font-size: 12px; color: #bbb; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats { grid-template-columns: 1fr; }
+  .filter-grid { grid-template-columns: 1fr 1fr; }
+  .header-inner { padding: 12px 16px; }
+  .main { padding: 16px; }
+  th, td { padding: 8px 10px; font-size: 13px; }
+}
+@media (max-width: 480px) {
+  .filter-grid { grid-template-columns: 1fr; }
+  .header h1 { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>香港小學插班資訊</h1>
+      <p class="date" id="currentDate"></p>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="stats">
+    <div class="stat-card">
+      <p class="label">正在開放申請</p>
+      <p class="value" id="statOpen">0</p>
+      <p class="sub" id="statOpenBreakdown"></p>
+    </div>
+    <div class="stat-card">
+      <p class="label">學校總數</p>
+      <p class="value" id="statTotal">0</p>
+      <p class="sub" id="statTotalBreakdown"></p>
+    </div>
+    <div class="stat-card">
+      <p class="label">數據更新狀態</p>
+      <div class="status-row">
+        <p class="status-text">暫無更新</p>
+        <button class="refresh-btn" onclick="location.reload()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-grid">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="searchInput" type="text" placeholder="搜索學校名稱..." oninput="applyFilters()">
+      </div>
+      <select class="filter-select" id="filterDistrict" onchange="applyFilters()"><option value="">全部區域</option></select>
+      <select class="filter-select" id="filterGender" onchange="applyFilters()"><option value="">全部性別</option></select>
+      <select class="filter-select" id="filterType" onchange="applyFilters()"><option value="">全部類型</option></select>
+      <select class="filter-select" id="filterStatus" onchange="applyFilters()"><option value="">全部狀態</option></select>
+    </div>
+  </div>
+
+  <div class="result-bar">
+    <p class="result-count" id="resultCount"></p>
+    <button class="export-btn" onclick="exportCSV()">導出 CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>學校名稱</th><th>區域</th><th>性別</th><th>類型</th><th>截止日期</th><th>狀態</th><th>官網</th>
+        </tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<div class="footer">數據來源：騰訊文档 · 僅供參考</div>
+
+<script>

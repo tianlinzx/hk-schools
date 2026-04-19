@@ -1,0 +1,32 @@
+name: Update School Data
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch latest data
+        run: python fetch_data.py
+        env:
+          TD_CLIENT_ID: ${{ secrets.TD_CLIENT_ID }}
+          TD_ACCESS_TOKEN: ${{ secrets.TD_ACCESS_TOKEN }}
+          TD_OPEN_ID: ${{ secrets.TD_OPEN_ID }}
+          TD_FILE_ID: ${{ secrets.TD_FILE_ID }}
+          TD_SHEET_ID: ${{ secrets.TD_SHEET_ID }}
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet index.html || (git add index.html && git commit -m "auto: update school data $(date +%Y-%m-%d)" && git push)
