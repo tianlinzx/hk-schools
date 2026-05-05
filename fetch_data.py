@@ -40,7 +40,7 @@ def fetch_data():
     file_id = os.environ["TD_FILE_ID"]
     sheet_id = os.environ["TD_SHEET_ID"]
 
-    url = f"{API_BASE}/{file_id}/{sheet_id}/A1:J600"
+    url = f"{API_BASE}/{file_id}/{sheet_id}/A1:K900"
     req = urllib.request.Request(url, headers={
         "Access-Token": access_token,
         "Open-Id": open_id,
@@ -74,6 +74,9 @@ def fetch_data():
                 vals.append(cv["text"].strip())
             elif "number" in cv:
                 vals.append(str(cv["number"]))
+            elif "time" in cv:
+                t = cv["time"]
+                vals.append(f"{t.get('year','')}/{t.get('month','')}/{t.get('day','')}")
             elif "link" in cv:
                 link = cv["link"]
                 vals.append(link.get("url", str(link)) if isinstance(link, dict) else str(link))
@@ -87,13 +90,14 @@ def fetch_data():
             "name": vals[0] if len(vals) > 0 else "",
             "district": vals[1] if len(vals) > 1 else "",
             "level": vals[2] if len(vals) > 2 else "",
-            "gender": vals[3] if len(vals) > 3 else "",
-            "type": vals[4] if len(vals) > 4 else "",
-            "status": vals[5] if len(vals) > 5 else "",
-            "deadline": vals[6] if len(vals) > 6 else "",
-            "address": vals[7] if len(vals) > 7 else "",
-            "website": vals[8] if len(vals) > 8 else "",
-            "phone": vals[9] if len(vals) > 9 else "",
+            "banding": vals[3] if len(vals) > 3 else "",
+            "gender": vals[4] if len(vals) > 4 else "",
+            "type": vals[5] if len(vals) > 5 else "",
+            "status": vals[6] if len(vals) > 6 else "",
+            "deadline": vals[7] if len(vals) > 7 else "",
+            "address": vals[8] if len(vals) > 8 else "",
+            "website": vals[9] if len(vals) > 9 else "",
+            "phone": vals[10] if len(vals) > 10 else "",
         }
         schools.append(school)
 

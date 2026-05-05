@@ -17,26 +17,25 @@ function renderDate() {
 
 function renderStats() {
   var total = SCHOOLS.length;
-  var open = SCHOOLS.filter(function(s){ return s.status && s.status.indexOf('開放') >= 0; }).length;
-  document.getElementById('statOpen').textContent = open;
+  var primary = SCHOOLS.filter(function(s){ return s.level === '小学'; }).length;
+  var secondary = SCHOOLS.filter(function(s){ return s.level === '中学'; }).length;
+
+  var openPrimary = SCHOOLS.filter(function(s){ return s.level === '小学' && s.status && (s.status.indexOf('開放') >= 0 || s.status.indexOf('进行') >= 0); }).length;
+  var openSecondary = SCHOOLS.filter(function(s){ return s.level === '中学' && s.status && (s.status.indexOf('開放') >= 0 || s.status.indexOf('进行') >= 0); }).length;
+  var openTotal = openPrimary + openSecondary;
+
+  document.getElementById('statOpen').textContent = openTotal;
+  document.getElementById('statOpenBreakdown').textContent = '小学 ' + openPrimary + ' \u00b7 中学 ' + openSecondary;
   document.getElementById('statTotal').textContent = total;
-  var types = {};
-  SCHOOLS.forEach(function(s){ types[s.type] = (types[s.type]||0) + 1; });
-  var parts = [];
-  for (var k in types) parts.push(k + ' ' + types[k]);
-  document.getElementById('statTotalBreakdown').textContent = parts.join(' \u00b7 ');
-  document.getElementById('statOpenBreakdown').textContent = open > 0 ? '小學 ' + open : '暫無開放申請';
+  document.getElementById('statTotalBreakdown').textContent = '小学 ' + primary + ' \u00b7 中学 ' + secondary;
 }
 
 function populateFilters() {
-  var districts = unique('district').sort();
-  var genders = unique('gender').sort();
-  var types = unique('type').sort();
-  var statuses = unique('status').sort();
-  fillSel('filterDistrict', districts);
-  fillSel('filterGender', genders);
-  fillSel('filterType', types);
-  fillSel('filterStatus', statuses);
+  fillSel('filterDistrict', unique('district').sort());
+  fillSel('filterLevel', unique('level').sort());
+  fillSel('filterGender', unique('gender').sort());
+  fillSel('filterType', unique('type').sort());
+  fillSel('filterStatus', unique('status').sort());
 }
 
 function unique(key) {
@@ -57,12 +56,14 @@ function fillSel(id, items) {
 function applyFilters() {
   var search = document.getElementById('searchInput').value.trim().toLowerCase();
   var district = document.getElementById('filterDistrict').value;
+  var level = document.getElementById('filterLevel').value;
   var gender = document.getElementById('filterGender').value;
   var type = document.getElementById('filterType').value;
   var status = document.getElementById('filterStatus').value;
   filteredData = SCHOOLS.filter(function(s) {
     if (search && s.name.toLowerCase().indexOf(search) < 0) return false;
     if (district && s.district !== district) return false;
+    if (level && s.level !== level) return false;
     if (gender && s.gender !== gender) return false;
     if (type && s.type !== type) return false;
     if (status && s.status !== status) return false;
@@ -84,16 +85,20 @@ function renderTable() {
   for (var i = 0; i < page.length; i++) {
     var s = page[i];
     var tc = typeBadgeMap[s.type] || 'badge-closed';
+    var bandHtml = s.banding ? '<span class="badge badge-band">' + s.banding + '</span>' : '<span class="badge-none">—</span>';
+    var statusClass = 'badge-closed';
+    if (s.status) {
+      if (s.status.indexOf('进行') >= 0 || s.status.indexOf('開放') >= 0) statusClass = 'badge-open';
+      else if (s.status.indexOf('即将') >= 0) statusClass = 'badge-pending';
+    }
     var statusHtml = s.status
-      ? (s.status.indexOf('開放') >= 0
-        ? '<span class="badge badge-open">' + s.status + '</span>'
-        : '<span class="badge badge-closed">' + s.status + '</span>')
+      ? '<span class="badge ' + statusClass + '">' + s.status + '</span>'
       : '<span class="badge-none">—</span>';
     var deadlineHtml = s.deadline || '<span class="badge-none">—</span>';
-    var webHtml = s.website && s.website.indexOf('http') === 0
-      ? '<a href="' + s.website + '" target="_blank" rel="noopener" class="link-icon"><svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>'
+    var webHtml = s.website && (s.website.indexOf('http') === 0 || s.website.indexOf('.edu.hk') >= 0)
+      ? '<a href="' + (s.website.indexOf('http') === 0 ? s.website : 'http://' + s.website) + '" target="_blank" rel="noopener" class="link-icon"><svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>'
       : '<span class="badge-none">—</span>';
-    html += '<tr><td style="font-weight:500">' + s.name + '</td><td>' + s.district + '</td><td>' + s.gender + '</td><td><span class="badge ' + tc + '">' + s.type + '</span></td><td style="color:#999">' + deadlineHtml + '</td><td>' + statusHtml + '</td><td>' + webHtml + '</td></tr>';
+    html += '<tr><td style="font-weight:500">' + s.name + '</td><td>' + s.district + '</td><td>' + s.level + '</td><td>' + bandHtml + '</td><td>' + s.gender + '</td><td><span class="badge ' + tc + '">' + s.type + '</span></td><td style="color:#999">' + deadlineHtml + '</td><td>' + statusHtml + '</td><td>' + webHtml + '</td></tr>';
   }
   tbody.innerHTML = html;
 }
@@ -125,13 +130,13 @@ function goPage(p) {
 }
 
 function exportCSV() {
-  var headers = ['學校名稱','區域','性別','類型','截止日期','狀態','地址','官網','電話'];
-  var rows = filteredData.map(function(s){ return [s.name,s.district,s.gender,s.type,s.deadline,s.status,s.address,s.website,s.phone]; });
+  var headers = ['學校名稱','區域','學段','Banding','性別','類型','截止日期','狀態','地址','官網','電話'];
+  var rows = filteredData.map(function(s){ return [s.name,s.district,s.level,s.banding,s.gender,s.type,s.deadline,s.status,s.address,s.website,s.phone]; });
   var csv = '\uFEFF' + [headers].concat(rows).map(function(r){ return r.map(function(c){ return '"'+(c||'').replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
   var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'hk_primary_schools.csv';
+  a.download = 'hk_schools.csv';
   a.click();
 }
 </script>

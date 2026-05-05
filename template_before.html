@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>香港小學插班資訊</title>
+<title>香港中小學插班資訊</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F5F5; color: #333; min-height: 100vh; }
@@ -34,7 +34,7 @@ a { color: inherit; text-decoration: none; }
 
 /* Filter */
 .filter-bar { background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #f0f0f0; margin-bottom: 24px; }
-.filter-grid { display: grid; grid-template-columns: 1fr repeat(4, 1fr); gap: 12px; }
+.filter-grid { display: grid; grid-template-columns: 1fr repeat(5, 1fr); gap: 12px; }
 .search-wrap { position: relative; }
 .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #999; }
 .search-input { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
@@ -71,7 +71,9 @@ tbody tr:nth-child(even):hover { background: #F0F4FF; }
 .badge-public { background: #ede9fe; color: #7c3aed; }
 .badge-aided { background: #ccfbf1; color: #0f766e; }
 .badge-open { background: #dcfce7; color: #15803d; }
+.badge-pending { background: #fef9c3; color: #a16207; }
 .badge-closed { background: #f3f4f6; color: #6b7280; }
+.badge-band { background: #e0e7ff; color: #3730a3; }
 .badge-none { color: #d1d5db; }
 .link-icon { color: #EF4444; }
 .link-icon:hover { color: #dc2626; }
@@ -105,7 +107,7 @@ tbody tr:nth-child(even):hover { background: #F0F4FF; }
 <div class="header">
   <div class="header-inner">
     <div>
-      <h1>香港小學插班資訊</h1>
+      <h1>香港中小學插班資訊</h1>
       <p class="date" id="currentDate"></p>
     </div>
   </div>
@@ -141,6 +143,7 @@ tbody tr:nth-child(even):hover { background: #F0F4FF; }
         <input class="search-input" id="searchInput" type="text" placeholder="搜索學校名稱..." oninput="applyFilters()">
       </div>
       <select class="filter-select" id="filterDistrict" onchange="applyFilters()"><option value="">全部區域</option></select>
+      <select class="filter-select" id="filterLevel" onchange="applyFilters()"><option value="">全部學段</option></select>
       <select class="filter-select" id="filterGender" onchange="applyFilters()"><option value="">全部性別</option></select>
       <select class="filter-select" id="filterType" onchange="applyFilters()"><option value="">全部類型</option></select>
       <select class="filter-select" id="filterStatus" onchange="applyFilters()"><option value="">全部狀態</option></select>
@@ -156,7 +159,7 @@ tbody tr:nth-child(even):hover { background: #F0F4FF; }
     <div class="table-scroll">
       <table>
         <thead><tr>
-          <th>學校名稱</th><th>區域</th><th>性別</th><th>類型</th><th>截止日期</th><th>狀態</th><th>官網</th>
+          <th>學校名稱</th><th>區域</th><th>學段</th><th>Banding</th><th>性別</th><th>類型</th><th>截止日期</th><th>狀態</th><th>官網</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
